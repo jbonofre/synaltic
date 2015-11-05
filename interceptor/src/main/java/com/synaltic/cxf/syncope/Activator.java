@@ -1,11 +1,7 @@
 package com.synaltic.cxf.syncope;
 
-import net.sf.ehcache.concurrent.Sync;
 import org.apache.cxf.Bus;
 import org.apache.cxf.feature.LoggingFeature;
-import org.apache.cxf.interceptor.Interceptor;
-import org.apache.cxf.interceptor.LoggingInInterceptor;
-import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
