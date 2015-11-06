@@ -76,10 +76,17 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
         responseHeaders.put("WWW-Authenticate", Arrays.asList(new String[] {"Basic realm=realm"}));
         message.getInterceptorChain().abort();
 
-        /*
         try {
             EndpointReferenceType target = exchange.get(EndpointReferenceType.class);
+            if (exchange.getDestination() == null) {
+                LOGGER.warn("Exchange destination is null");
+                return;
+            }
             Conduit conduit = exchange.getDestination().getBackChannel(message, null, target);
+            if (conduit == null) {
+                LOGGER.warn("Conduit is null");
+                return;
+            }
             exchange.setConduit(conduit);
             conduit.prepare(outMessage);
             OutputStream os = outMessage.getContent(OutputStream.class);
@@ -88,7 +95,6 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
         } catch (Exception e) {
             LOGGER.error("Can't prepare response", e);
         }
-        */
     }
 
     public void handleMessage(Message message) throws Fault {
