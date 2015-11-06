@@ -67,7 +67,7 @@ public class InterceptorsUtil {
             while (keys.hasMoreElements()) {
                 String key = (String) keys.nextElement();
                 LOGGER.debug("Checking if bus {} starts with {} ...", busId, key);
-                if (busId.startsWith(key)) {
+                if (key.equals("*") || busId.startsWith(key)) {
                     String roles = (String) properties.get(key);
                     LOGGER.debug("Roles found for CXF bus {}: {}", busId, roles);
                     return roles.split(",");
@@ -109,7 +109,7 @@ public class InterceptorsUtil {
     public boolean busDefined(String id) throws Exception {
         List<String> buses = this.getBuses();
         for (String bus : buses) {
-            if (id.startsWith(bus)) {
+            if (bus.equals("*") || id.startsWith(bus)) {
                 return true;
             }
         }

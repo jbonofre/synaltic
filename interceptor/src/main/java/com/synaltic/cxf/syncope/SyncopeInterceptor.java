@@ -79,14 +79,10 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
         try {
             EndpointReferenceType target = exchange.get(EndpointReferenceType.class);
             if (exchange.getDestination() == null) {
-                LOGGER.warn("Exchange destination is null");
+                LOGGER.debug("Exchange destination is null");
                 return;
             }
             Conduit conduit = exchange.getDestination().getBackChannel(message, null, target);
-            if (conduit == null) {
-                LOGGER.warn("Conduit is null");
-                return;
-            }
             exchange.setConduit(conduit);
             conduit.prepare(outMessage);
             OutputStream os = outMessage.getContent(OutputStream.class);
@@ -122,7 +118,8 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
                 credential = validator.validate(credential, data);
             } catch (Exception e) {
                 LOGGER.warn("Syncope authentication failed");
-                sendErrorResponse(message, HttpURLConnection.HTTP_FORBIDDEN);
+                // sendErrorResponse(message, HttpURLConnection.HTTP_FORBIDDEN);
+                sendErrorResponse(message, HttpURLConnection.HTTP_UNAUTHORIZED);
             }
 
             // Create a Principal/SecurityContext
