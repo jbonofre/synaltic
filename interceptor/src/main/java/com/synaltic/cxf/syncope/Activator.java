@@ -16,14 +16,13 @@ public class Activator implements BundleActivator {
     private final static Logger LOGGER = LoggerFactory.getLogger(Activator.class);
 
     private ServiceTracker<Bus, ServiceRegistration> tracker;
-    private ConfigurationAdmin configurationAdmin;
+    private ServiceTracker configAdminTracker;
 
     public void start(final BundleContext bundleContext) throws Exception {
         LOGGER.debug("Starting CXF buses tracker");
-        ServiceTracker configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+        configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
         configAdminTracker.open();
-        configurationAdmin = (ConfigurationAdmin) configAdminTracker.waitForService(2000);
-        configAdminTracker.close();
+        final ConfigurationAdmin configurationAdmin = (ConfigurationAdmin) configAdminTracker.waitForService(2000);
         tracker = new ServiceTracker<Bus, ServiceRegistration>(bundleContext, Bus.class, null) {
 
             public ServiceRegistration<?> addingService(ServiceReference<Bus> reference) {
@@ -70,6 +69,7 @@ public class Activator implements BundleActivator {
 
     public void stop(BundleContext bundleContext) throws Exception {
         tracker.close();
+        configAdminTracker.close();
     }
 
 }
