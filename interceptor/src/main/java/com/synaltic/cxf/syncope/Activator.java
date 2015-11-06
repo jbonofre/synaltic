@@ -57,9 +57,7 @@ public class Activator implements BundleActivator {
                     LOGGER.error("CXF bus tracking error", e);
                 }
 
-                // TODO add out interceptor for logging
-
-                bundleContext.ungetService(configurationAdminReference);
+                //bundleContext.ungetService(configurationAdminReference);
 
                 return null;
             }
