@@ -16,28 +16,24 @@ public class Activator implements BundleActivator {
     private final static Logger LOGGER = LoggerFactory.getLogger(Activator.class);
 
     private ServiceTracker<Bus, ServiceRegistration> tracker;
+    private ConfigurationAdmin configurationAdmin;
 
-    public void start(final BundleContext bundleContext) {
+    public void start(final BundleContext bundleContext) throws Exception {
         LOGGER.debug("Starting CXF buses tracker");
+        ServiceTracker configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+        configAdminTracker.open();
+        configurationAdmin = (ConfigurationAdmin) configAdminTracker.waitForService(2000);
+        configAdminTracker.close();
         tracker = new ServiceTracker<Bus, ServiceRegistration>(bundleContext, Bus.class, null) {
 
             public ServiceRegistration<?> addingService(ServiceReference<Bus> reference) {
                 Bus bus = bundleContext.getService(reference);
                 String id = bus.getId();
 
-                ServiceReference configurationAdminReference = bundleContext.getServiceReference(ConfigurationAdmin.class);
-                if (configurationAdminReference == null) {
-                    throw new IllegalStateException("ConfigurationAdmin service not found");
-                }
-                ConfigurationAdmin configurationAdmin = (ConfigurationAdmin) bundleContext.getService(configurationAdminReference);
-                if (configurationAdmin == null) {
-                    throw new IllegalStateException("ConfigurationAdmin service not found");
-                }
-
                 SyncopeValidator syncopeValidator = new SyncopeValidator();
                 syncopeValidator.setConfigurationAdmin(configurationAdmin);
 
-                BasicAuthInterceptor syncopeInterceptor = new BasicAuthInterceptor();
+                SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
                 syncopeInterceptor.setValidator(syncopeValidator);
                 syncopeInterceptor.setConfigurationAdmin(configurationAdmin);
 

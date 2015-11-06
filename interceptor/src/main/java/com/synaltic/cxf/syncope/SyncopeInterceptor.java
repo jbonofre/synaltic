@@ -40,19 +40,19 @@ import java.util.*;
 /**
  * This interceptor just get a base authorization, and create a UsernameToken delegated to the Syncope interceptor
  */
-public class BasicAuthInterceptor extends AbstractPhaseInterceptor<Message> {
+public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(BasicAuthInterceptor.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(SyncopeInterceptor.class);
 
     private ConfigurationAdmin configurationAdmin;
 
     private Validator validator;
 
-    public BasicAuthInterceptor() {
+    public SyncopeInterceptor() {
         this(Phase.UNMARSHAL);
     }
 
-    public BasicAuthInterceptor(String phase) {
+    public SyncopeInterceptor(String phase) {
         super(phase);
     }
 
