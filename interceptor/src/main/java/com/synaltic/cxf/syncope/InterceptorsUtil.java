@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utils to get the CXF buses defined in the configuration
@@ -66,8 +68,10 @@ public class InterceptorsUtil {
             Enumeration keys = properties.keys();
             while (keys.hasMoreElements()) {
                 String key = (String) keys.nextElement();
-                LOGGER.debug("Checking if bus {} starts with {} ...", busId, key);
-                if (key.equals("*") || busId.startsWith(key)) {
+                LOGGER.debug("Checking bus {} on regex {}", busId, key);
+                Pattern pattern = Pattern.compile(key);
+                Matcher matcher = pattern.matcher(busId);
+                if (matcher.matches()) {
                     String roles = (String) properties.get(key);
                     LOGGER.debug("Roles found for CXF bus {}: {}", busId, roles);
                     return roles.split(",");
@@ -109,7 +113,9 @@ public class InterceptorsUtil {
     public boolean busDefined(String id) throws Exception {
         List<String> buses = this.getBuses();
         for (String bus : buses) {
-            if (bus.equals("*") || id.startsWith(bus)) {
+            Pattern pattern = Pattern.compile(bus);
+            Matcher matcher = pattern.matcher(id);
+            if (matcher.matches()) {
                 return true;
             }
         }
