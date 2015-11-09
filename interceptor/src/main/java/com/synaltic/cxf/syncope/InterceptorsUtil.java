@@ -17,14 +17,12 @@ import java.util.regex.Pattern;
  */
 public class InterceptorsUtil {
 
-    private final static String CONFIG_PID = "com.synaltic.cxf.syncope.authorization";
+    private Dictionary properties;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(InterceptorsUtil.class);
 
-    private ConfigurationAdmin configurationAdmin;
-
-    public InterceptorsUtil(ConfigurationAdmin configurationAdmin) {
-        this.configurationAdmin = configurationAdmin;
+    public InterceptorsUtil(Dictionary properties) {
+        this.properties = properties;
     }
 
     /**
@@ -33,13 +31,7 @@ public class InterceptorsUtil {
      * @return the list of bus ID defined
      */
     public List<String> getBuses() throws Exception {
-        Configuration configuration = configurationAdmin.getConfiguration(CONFIG_PID);
-        if (configuration == null) {
-            LOGGER.error("Configuration {} not found", CONFIG_PID);
-            throw new IllegalStateException("Configuration " + CONFIG_PID + " not found");
-        }
         ArrayList<String> buses = new ArrayList<String>();
-        Dictionary properties = configuration.getProperties();
         if (properties != null) {
             Enumeration keys = properties.keys();
             while (keys.hasMoreElements()) {
@@ -58,12 +50,6 @@ public class InterceptorsUtil {
      * @return the list of roles defined for the bus.
      */
     private String[] getBusRoles(String busId) throws Exception {
-        Configuration configuration = configurationAdmin.getConfiguration(CONFIG_PID);
-        if (configuration == null) {
-            LOGGER.error("Configuration {} not found", CONFIG_PID);
-            throw new IllegalStateException("Configuration " + CONFIG_PID + " not found");
-        }
-        Dictionary properties = configuration.getProperties();
         if (properties != null) {
             Enumeration keys = properties.keys();
             while (keys.hasMoreElements()) {
@@ -87,12 +73,6 @@ public class InterceptorsUtil {
      * @return the REST API address of Syncope.
      */
     public String getSyncopeAddress() throws Exception {
-        Configuration configuration = configurationAdmin.getConfiguration(CONFIG_PID);
-        if (configuration == null) {
-            LOGGER.error("Configuration {} not found", CONFIG_PID);
-            throw new IllegalStateException("Configuration " + CONFIG_PID + " not found");
-        }
-        Dictionary properties = configuration.getProperties();
         if (properties != null) {
             Object address = properties.get("syncope.address");
             if (address != null) {

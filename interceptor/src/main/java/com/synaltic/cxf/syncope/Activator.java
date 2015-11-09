@@ -2,41 +2,43 @@ package com.synaltic.cxf.syncope;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.feature.LoggingFeature;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ConfigurationAdmin;
+import org.apache.cxf.interceptor.Interceptor;
+import org.osgi.framework.*;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 public class Activator implements BundleActivator {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(Activator.class);
 
-    private ServiceTracker<Bus, ServiceRegistration> tracker;
-    private ServiceTracker configAdminTracker;
+    private final static String CONFIG_PID = "com.synaltic.cxf.syncope.authorization";
+
+    private ServiceTracker<Bus, ServiceRegistration> cxfBusesTracker;
+    private ServiceRegistration managedServiceRegistration;
+    private Dictionary properties;
 
     public void start(final BundleContext bundleContext) throws Exception {
-        LOGGER.debug("Starting CXF buses tracker");
-        configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
-        configAdminTracker.open();
-        final ConfigurationAdmin configurationAdmin = (ConfigurationAdmin) configAdminTracker.waitForService(2000);
-        tracker = new ServiceTracker<Bus, ServiceRegistration>(bundleContext, Bus.class, null) {
+        LOGGER.debug("Starting CXF buses cxfBusesTracker");
+        cxfBusesTracker = new ServiceTracker<Bus, ServiceRegistration>(bundleContext, Bus.class, null) {
 
             public ServiceRegistration<?> addingService(ServiceReference<Bus> reference) {
                 Bus bus = bundleContext.getService(reference);
                 String id = bus.getId();
 
                 SyncopeValidator syncopeValidator = new SyncopeValidator();
-                syncopeValidator.setConfigurationAdmin(configurationAdmin);
+                syncopeValidator.setProperties(properties);
 
                 SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
                 syncopeInterceptor.setValidator(syncopeValidator);
-                syncopeInterceptor.setConfigurationAdmin(configurationAdmin);
+                syncopeInterceptor.setProperties(properties);
 
-                InterceptorsUtil util = new InterceptorsUtil(configurationAdmin);
+                InterceptorsUtil util = new InterceptorsUtil(properties);
                 try {
                     if (util.busDefined(id)) {
                         LOGGER.debug("Injecting Syncope interceptor on CXF bus {}", id);
@@ -52,8 +54,6 @@ public class Activator implements BundleActivator {
                     LOGGER.error("CXF bus tracking error", e);
                 }
 
-                //bundleContext.ungetService(configurationAdminReference);
-
                 return null;
             }
 
@@ -64,12 +64,66 @@ public class Activator implements BundleActivator {
 
 
         };
-        tracker.open();
+        cxfBusesTracker.open();
+        Dictionary<String, String> properties = new Hashtable<String, String>();
+        properties.put(Constants.SERVICE_PID, CONFIG_PID);
+        managedServiceRegistration = bundleContext.registerService(ManagedService.class.getName(), new ConfigUpdater(bundleContext), properties);
     }
 
     public void stop(BundleContext bundleContext) throws Exception {
-        tracker.close();
-        configAdminTracker.close();
+        if (cxfBusesTracker != null)
+            cxfBusesTracker.close();
+        if (managedServiceRegistration != null)
+            managedServiceRegistration.unregister();
+    }
+
+    private final class ConfigUpdater implements ManagedService {
+
+        private BundleContext bundleContext;
+
+        public ConfigUpdater(BundleContext bundleContext) {
+            this.bundleContext = bundleContext;
+        }
+
+        public void updated(Dictionary<String, ?> config) throws ConfigurationException {
+            properties = config;
+            // update existing buses
+            try {
+                ServiceReference[] references = bundleContext.getServiceReferences(Bus.class.getName(), null);
+                for (ServiceReference reference : references) {
+                    Bus bus = (Bus) bundleContext.getService(reference);
+                    String id = bus.getId();
+                    InterceptorsUtil util = new InterceptorsUtil(properties);
+                    if (!util.busDefined(id)) {
+                        for (Interceptor interceptor : bus.getInInterceptors()) {
+                            if ((interceptor instanceof SyncopeInterceptor)) {
+                                bus.getInInterceptors().remove(interceptor);
+                            }
+                        }
+                    } else {
+                        boolean found = false;
+                        for (Interceptor interceptor : bus.getInInterceptors()) {
+                            if ((interceptor instanceof SyncopeInterceptor)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            SyncopeValidator syncopeValidator = new SyncopeValidator();
+                            syncopeValidator.setProperties(properties);
+
+                            SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
+                            syncopeInterceptor.setValidator(syncopeValidator);
+                            syncopeInterceptor.setProperties(properties);
+
+                            bus.getInInterceptors().add(syncopeInterceptor);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                throw new ConfigurationException("", "Can't update configuration", e);
+            }
+        }
     }
 
 }

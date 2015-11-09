@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class SyncopeValidator implements Validator {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SyncopeValidator.class);
 
-    private ConfigurationAdmin configurationAdmin;
+    private Dictionary properties;
 
     public Credential validate(Credential credential, RequestData data) throws WSSecurityException {
         if (credential == null || credential.getUsernametoken() == null) {
@@ -49,7 +50,7 @@ public class SyncopeValidator implements Validator {
         }
 
         // create the util and retrieve Syncope address
-        InterceptorsUtil util = new InterceptorsUtil(configurationAdmin);
+        InterceptorsUtil util = new InterceptorsUtil(properties);
         String address;
         try {
             address = util.getSyncopeAddress();
@@ -109,12 +110,8 @@ public class SyncopeValidator implements Validator {
         return credential;
     }
 
-    public void setConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
-        this.configurationAdmin = configurationAdmin;
-    }
-
-    public ConfigurationAdmin getConfigurationAdmin() {
-        return this.configurationAdmin;
+    public void setProperties(Dictionary properties) {
+        this.properties = properties;
     }
 
 }

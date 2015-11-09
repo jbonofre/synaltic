@@ -44,9 +44,9 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
 
     private final Logger LOGGER = LoggerFactory.getLogger(SyncopeInterceptor.class);
 
-    private ConfigurationAdmin configurationAdmin;
-
     private Validator validator;
+
+    private Dictionary properties;
 
     public SyncopeInterceptor() {
         this(Phase.UNMARSHAL);
@@ -132,7 +132,7 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
             }
 
             // create the util and retrieve Syncope address
-            InterceptorsUtil util = new InterceptorsUtil(configurationAdmin);
+            InterceptorsUtil util = new InterceptorsUtil(properties);
             String address;
             try {
                 address = util.getSyncopeAddress();
@@ -208,12 +208,8 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
         this.validator = validator;
     }
 
-    public ConfigurationAdmin getConfigurationAdmin() {
-        return configurationAdmin;
-    }
-
-    public void setConfigurationAdmin(ConfigurationAdmin configurationAdmin) {
-        this.configurationAdmin = configurationAdmin;
+    public void setProperties(Dictionary properties) {
+        this.properties = properties;
     }
 
 }
