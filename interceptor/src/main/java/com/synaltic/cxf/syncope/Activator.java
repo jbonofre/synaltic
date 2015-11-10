@@ -23,35 +23,48 @@ public class Activator implements BundleActivator {
     private ServiceRegistration managedServiceRegistration;
     private Dictionary properties;
 
+    private void inject(Bus bus, Dictionary properties) throws Exception {
+        InterceptorsUtil util = new InterceptorsUtil(properties);
+        if (util.busDefined(bus.getId())) {
+            for (Interceptor interceptor : bus.getInInterceptors()) {
+                if (interceptor instanceof SyncopeInterceptor) {
+                    LOGGER.debug("SyncopeInterceptor already present in bus {}", bus.getId());
+                    return;
+                }
+            }
+            LOGGER.debug("Create Syncope validator");
+            SyncopeValidator syncopeValidator = new SyncopeValidator();
+            syncopeValidator.setProperties(properties);
+
+            LOGGER.debug("Create Syncope interceptor");
+            SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
+            syncopeInterceptor.setValidator(syncopeValidator);
+            syncopeInterceptor.setProperties(properties);
+
+            LOGGER.debug("Injecting Syncope interceptor in bus {}", bus.getId());
+            bus.getInInterceptors().add(syncopeInterceptor);
+        }
+    }
+
+    private void remove(Bus bus) {
+        for (Interceptor interceptor : bus.getInInterceptors()) {
+            if (interceptor instanceof SyncopeInterceptor) {
+                bus.getInInterceptors().remove(interceptor);
+            }
+        }
+    }
+
     public void start(final BundleContext bundleContext) throws Exception {
         LOGGER.debug("Starting CXF buses cxfBusesTracker");
         cxfBusesTracker = new ServiceTracker<Bus, ServiceRegistration>(bundleContext, Bus.class, null) {
 
             public ServiceRegistration<?> addingService(ServiceReference<Bus> reference) {
                 Bus bus = bundleContext.getService(reference);
-                String id = bus.getId();
 
-                SyncopeValidator syncopeValidator = new SyncopeValidator();
-                syncopeValidator.setProperties(properties);
-
-                SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
-                syncopeInterceptor.setValidator(syncopeValidator);
-                syncopeInterceptor.setProperties(properties);
-
-                InterceptorsUtil util = new InterceptorsUtil(properties);
                 try {
-                    if (util.busDefined(id)) {
-                        LOGGER.debug("Injecting Syncope interceptor on CXF bus {}", id);
-                        bus.getFeatures().add(new LoggingFeature());
-                        if (!bus.getInInterceptors().contains(syncopeInterceptor)) {
-                            bus.getInInterceptors().add(syncopeInterceptor);
-                            LOGGER.info("Syncope interceptor injected on CXF bus {}, id");
-                        } else {
-                            LOGGER.debug("Syncope interceptor already defined on CXF bus {}", id);
-                        }
-                    }
+                    inject(bus, properties);
                 } catch (Exception e) {
-                    LOGGER.error("CXF bus tracking error", e);
+                    LOGGER.error("Can't inject Syncope interceptor", e);
                 }
 
                 return null;
@@ -87,37 +100,16 @@ public class Activator implements BundleActivator {
 
         public void updated(Dictionary<String, ?> config) throws ConfigurationException {
             properties = config;
-            // update existing buses
             try {
                 ServiceReference[] references = bundleContext.getServiceReferences(Bus.class.getName(), null);
                 for (ServiceReference reference : references) {
                     Bus bus = (Bus) bundleContext.getService(reference);
-                    String id = bus.getId();
+
                     InterceptorsUtil util = new InterceptorsUtil(properties);
-                    if (!util.busDefined(id)) {
-                        for (Interceptor interceptor : bus.getInInterceptors()) {
-                            if ((interceptor instanceof SyncopeInterceptor)) {
-                                bus.getInInterceptors().remove(interceptor);
-                            }
-                        }
+                    if (util.busDefined(bus.getId())) {
+                        inject(bus, properties);
                     } else {
-                        boolean found = false;
-                        for (Interceptor interceptor : bus.getInInterceptors()) {
-                            if ((interceptor instanceof SyncopeInterceptor)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            SyncopeValidator syncopeValidator = new SyncopeValidator();
-                            syncopeValidator.setProperties(properties);
-
-                            SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
-                            syncopeInterceptor.setValidator(syncopeValidator);
-                            syncopeInterceptor.setProperties(properties);
-
-                            bus.getInInterceptors().add(syncopeInterceptor);
-                        }
+                        remove(bus);
                     }
                 }
             } catch (Exception e) {
