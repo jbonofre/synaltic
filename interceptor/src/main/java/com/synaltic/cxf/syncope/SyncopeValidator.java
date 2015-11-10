@@ -95,6 +95,10 @@ public class SyncopeValidator implements Validator {
                 userRoles.add(roleName);
             }
 
+            LOGGER.debug("Checking user roles");
+            LOGGER.debug("\tBus ID: {}", busId);
+            LOGGER.debug("\tUSer Roles: {}", userRoles);
+
             // validate the roles
             if (!util.authorize(busId, userRoles)) {
                 LOGGER.error("User {} has no role expected for CXF bus {}", user.getUsername(), busId);

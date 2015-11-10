@@ -110,16 +110,17 @@ public class InterceptorsUtil {
      * @return true if at least one of the role match, false else.
      */
     public boolean authorize(String busId, List<String> roles) throws Exception {
-        LOGGER.debug("Authorizing on bus ID {}", busId);
+        LOGGER.debug("Checking authorization for bus {}", busId);
         String[] configuredRoles = this.getBusRoles(busId);
         if (configuredRoles != null) {
             for (String role : roles) {
                 LOGGER.debug("Checking authorization for role {}", role);
                 for (String configuredRole : configuredRoles) {
-                    LOGGER.debug(" ... on {}", configuredRole);
                     if (role.equalsIgnoreCase(configuredRole)) {
-                        LOGGER.debug("Role ({}/{}) authorized", role, configuredRole);
+                        LOGGER.debug("Roles match ({}/{})", role, configuredRole);
                         return true;
+                    } else {
+                        LOGGER.debug("Roles not match ({}/{})", role, configuredRole);
                     }
                 }
             }
