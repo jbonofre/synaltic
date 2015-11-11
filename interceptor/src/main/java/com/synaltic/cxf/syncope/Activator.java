@@ -26,12 +26,6 @@ public class Activator implements BundleActivator {
     private void inject(Bus bus, Dictionary properties) throws Exception {
         InterceptorsUtil util = new InterceptorsUtil(properties);
         if (util.busDefined(bus.getId())) {
-            for (Interceptor interceptor : bus.getInInterceptors()) {
-                if (interceptor instanceof SyncopeInterceptor) {
-                    LOGGER.debug("SyncopeInterceptor already present in bus {}", bus.getId());
-                    return;
-                }
-            }
             LOGGER.debug("Create Syncope validator");
             SyncopeValidator syncopeValidator = new SyncopeValidator();
             syncopeValidator.setProperties(properties);
@@ -49,6 +43,7 @@ public class Activator implements BundleActivator {
     private void remove(Bus bus) {
         for (Interceptor interceptor : bus.getInInterceptors()) {
             if (interceptor instanceof SyncopeInterceptor) {
+                LOGGER.debug("Removing old Syncope interceptor");
                 bus.getInInterceptors().remove(interceptor);
             }
         }
@@ -106,10 +101,9 @@ public class Activator implements BundleActivator {
                     Bus bus = (Bus) bundleContext.getService(reference);
 
                     InterceptorsUtil util = new InterceptorsUtil(properties);
+                    remove(bus);
                     if (util.busDefined(bus.getId())) {
                         inject(bus, properties);
-                    } else {
-                        remove(bus);
                     }
                 }
             } catch (Exception e) {
