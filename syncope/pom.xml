@@ -3,16 +3,18 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.synaltic.cxf.interceptor</groupId>
+    <parent>
+        <groupId>com.synaltic</groupId>
+        <artifactId>esb</artifactId>
+        <version>5.6.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <artifactId>syncope</artifactId>
-    <version>5.6.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <properties>
-        <cxf.version>2.7.15</cxf.version>
         <jackson.version>1.9.0</jackson.version>
-        <osgi.version>4.3.1</osgi.version>
-        <slf4j.version>1.7.5</slf4j.version>
         <syncope.version>1.1.3</syncope.version>
     </properties>
 
@@ -105,7 +107,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.4.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
