@@ -42,6 +42,7 @@ public class Activator implements BundleActivator {
     }
 
     public void start(final BundleContext bundleContext) throws Exception {
+        System.setProperty("org.apache.cxf.Logger", "org.apache.cxf.common.logging.Slf4jLogger");
         LOGGER.debug("Starting CXF buses cxfBusesTracker");
         cxfBusesTracker = new ServiceTracker<Bus, ServiceRegistration>(bundleContext, Bus.class, null) {
 
