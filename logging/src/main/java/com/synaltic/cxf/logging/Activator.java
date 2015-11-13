@@ -4,6 +4,8 @@ import org.apache.cxf.Bus;
 import org.apache.cxf.feature.Feature;
 import org.apache.cxf.feature.LoggingFeature;
 import org.apache.cxf.interceptor.Interceptor;
+import org.apache.cxf.interceptor.LoggingInInterceptor;
+import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.osgi.framework.*;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
@@ -27,16 +29,29 @@ public class Activator implements BundleActivator {
     private void inject(Bus bus, Dictionary properties) throws Exception {
         InterceptorsUtil util = new InterceptorsUtil(properties);
         if (util.isLoggingEnabled(bus.getId())) {
-            LOGGER.debug("Inject logging feature in bus {}", bus.getId());
-            bus.getFeatures().add(new LoggingFeature());
+            LoggingInInterceptor inInterceptor = new LoggingInInterceptor();
+            LoggingOutInterceptor outInterceptor = new LoggingOutInterceptor();
+            LOGGER.debug("Inject logging interceptors in bus {}", bus.getId());
+            bus.getInInterceptors().add(inInterceptor);
+            bus.getOutInterceptors().add(outInterceptor);
+            bus.getOutFaultInterceptors().add(outInterceptor);
         }
     }
 
     private void remove(Bus bus) {
-        for (Feature feature : bus.getFeatures()) {
-            if (feature instanceof LoggingFeature) {
-                LOGGER.debug("Removing logging feature");
-                bus.getFeatures().remove(feature);
+        for (Interceptor interceptor : bus.getInInterceptors()) {
+            if (interceptor instanceof LoggingInInterceptor) {
+                bus.getInInterceptors().remove(interceptor);
+            }
+        }
+        for (Interceptor interceptor : bus.getOutInterceptors()) {
+            if (interceptor instanceof LoggingOutInterceptor) {
+                bus.getOutInterceptors().remove(interceptor);
+            }
+        }
+        for (Interceptor interceptor : bus.getOutFaultInterceptors()) {
+            if (interceptor instanceof LoggingOutInterceptor) {
+                bus.getOutFaultInterceptors().remove(interceptor);
             }
         }
     }
