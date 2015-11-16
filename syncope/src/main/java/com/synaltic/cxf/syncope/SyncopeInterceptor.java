@@ -80,7 +80,6 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
                 LOGGER.debug("Exchange destination is null");
                 return;
             }
-            LOGGER.warn("Authorization policy is not present, creating {} response", errorCode);
             Conduit conduit = exchange.getDestination().getBackChannel(message, null, target);
             exchange.setConduit(conduit);
             conduit.prepare(outMessage);
