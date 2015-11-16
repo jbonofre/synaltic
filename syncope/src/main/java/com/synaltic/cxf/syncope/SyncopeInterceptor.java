@@ -116,7 +116,7 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
             try {
                 credential = validator.validate(credential, data);
             } catch (Exception e) {
-                LOGGER.warn("Syncope authentication failed");
+                LOGGER.warn("Syncope authentication failed", e);
                 // sendErrorResponse(message, HttpURLConnection.HTTP_FORBIDDEN);
                 sendErrorResponse(message, HttpURLConnection.HTTP_UNAUTHORIZED);
             }
