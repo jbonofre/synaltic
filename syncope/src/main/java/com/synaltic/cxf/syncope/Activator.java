@@ -1,7 +1,6 @@
 package com.synaltic.cxf.syncope;
 
 import org.apache.cxf.Bus;
-import org.apache.cxf.feature.LoggingFeature;
 import org.apache.cxf.interceptor.Interceptor;
 import org.osgi.framework.*;
 import org.osgi.service.cm.ConfigurationException;
