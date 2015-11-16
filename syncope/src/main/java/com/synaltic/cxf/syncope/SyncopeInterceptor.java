@@ -56,7 +56,6 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
     }
 
     public void sendErrorResponse(Message message, int errorCode) {
-        LOGGER.warn("Authorization policy is not present, creating {} response", errorCode);
 
         // no authentication provided, send error response
         Exchange exchange = message.getExchange();
@@ -81,6 +80,7 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
                 LOGGER.debug("Exchange destination is null");
                 return;
             }
+            LOGGER.warn("Authorization policy is not present, creating {} response", errorCode);
             Conduit conduit = exchange.getDestination().getBackChannel(message, null, target);
             exchange.setConduit(conduit);
             conduit.prepare(outMessage);
@@ -96,7 +96,6 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
         AuthorizationPolicy policy = message.get(AuthorizationPolicy.class);
 
         if (policy == null || policy.getUserName() == null || policy.getPassword() == null) {
-            LOGGER.warn("Authorization policy is not present, creating 401 response");
             // no authentication provided, send error response
             sendErrorResponse(message, HttpURLConnection.HTTP_UNAUTHORIZED);
             return;
