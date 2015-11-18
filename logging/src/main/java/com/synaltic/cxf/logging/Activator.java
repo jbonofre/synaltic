@@ -30,7 +30,9 @@ public class Activator implements BundleActivator {
         InterceptorsUtil util = new InterceptorsUtil(properties);
         if (util.isLoggingEnabled(bus.getId())) {
             LoggingInInterceptor inInterceptor = new LoggingInInterceptor();
+            inInterceptor.setPrettyLogging(true);
             LoggingOutInterceptor outInterceptor = new LoggingOutInterceptor();
+            outInterceptor.setPrettyLogging(true);
             LOGGER.debug("Inject logging interceptors in bus {}", bus.getId());
             bus.getInInterceptors().add(inInterceptor);
             bus.getOutInterceptors().add(outInterceptor);
