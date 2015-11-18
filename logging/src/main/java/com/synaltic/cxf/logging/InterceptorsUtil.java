@@ -47,19 +47,17 @@ public class InterceptorsUtil {
      * @param id the CXF bus ID to check.
      * @return true if the bus is defined in the configuration and logging enabled, false else.
      */
-    public boolean isLoggingEnabled(String id) throws Exception {
+    public String getLogger(String id) throws Exception {
         List<String> buses = this.getBuses();
         for (String bus : buses) {
             Pattern pattern = Pattern.compile(bus);
             Matcher matcher = pattern.matcher(id);
             if (matcher.matches()) {
-                String logging = (String) properties.get(bus);
-                if (logging.equalsIgnoreCase("on")) {
-                    return true;
-                }
+                String logger = (String) properties.get(bus);
+                return logger;
             }
         }
-        return false;
+        return null;
     }
 
 }

@@ -28,12 +28,13 @@ public class Activator implements BundleActivator {
 
     private void inject(Bus bus, Dictionary properties) throws Exception {
         InterceptorsUtil util = new InterceptorsUtil(properties);
-        if (util.isLoggingEnabled(bus.getId())) {
-            LoggingInInterceptor inInterceptor = new LoggingInInterceptor();
+        String loggerName = util.getLogger(bus.getId());
+        if (loggerName != null) {
+            SynalticLoggingInInterceptor inInterceptor = new SynalticLoggingInInterceptor(loggerName);
             inInterceptor.setPrettyLogging(true);
-            LoggingOutInterceptor outInterceptor = new LoggingOutInterceptor();
+            SynalticLoggingOutInterceptor outInterceptor = new SynalticLoggingOutInterceptor(loggerName);
             outInterceptor.setPrettyLogging(true);
-            LOGGER.debug("Inject logging interceptors in bus {}", bus.getId());
+            LOGGER.debug("Inject logging interceptors in bus {} (logger {})", bus.getId(), loggerName);
             bus.getInInterceptors().add(inInterceptor);
             bus.getOutInterceptors().add(outInterceptor);
             bus.getOutFaultInterceptors().add(outInterceptor);
@@ -42,17 +43,17 @@ public class Activator implements BundleActivator {
 
     private void remove(Bus bus) {
         for (Interceptor interceptor : bus.getInInterceptors()) {
-            if (interceptor instanceof LoggingInInterceptor) {
+            if (interceptor instanceof SynalticLoggingInInterceptor) {
                 bus.getInInterceptors().remove(interceptor);
             }
         }
         for (Interceptor interceptor : bus.getOutInterceptors()) {
-            if (interceptor instanceof LoggingOutInterceptor) {
+            if (interceptor instanceof SynalticLoggingOutInterceptor) {
                 bus.getOutInterceptors().remove(interceptor);
             }
         }
         for (Interceptor interceptor : bus.getOutFaultInterceptors()) {
-            if (interceptor instanceof LoggingOutInterceptor) {
+            if (interceptor instanceof SynalticLoggingOutInterceptor) {
                 bus.getOutFaultInterceptors().remove(interceptor);
             }
         }
@@ -112,7 +113,7 @@ public class Activator implements BundleActivator {
 
                     InterceptorsUtil util = new InterceptorsUtil(properties);
                     remove(bus);
-                    if (util.isLoggingEnabled(bus.getId())) {
+                    if (util.getLogger(bus.getId()) != null) {
                         inject(bus, properties);
                     }
                 }
