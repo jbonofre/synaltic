@@ -10,6 +10,7 @@ public class SynalticLoggingInInterceptor extends LoggingInInterceptor {
 
     public SynalticLoggingInInterceptor(String loggerName) {
         logger = Logger.getLogger(loggerName);
+        System.out.println("LoggingOutInterceptor loaded (" + loggerName + ")");
     }
 
     @Override
