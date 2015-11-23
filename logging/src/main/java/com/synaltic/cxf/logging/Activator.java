@@ -30,10 +30,8 @@ public class Activator implements BundleActivator {
         InterceptorsUtil util = new InterceptorsUtil(properties);
         String loggerName = util.getLogger(bus.getId());
         if (loggerName != null) {
-            SynalticLoggingInInterceptor inInterceptor = new SynalticLoggingInInterceptor(loggerName);
-            inInterceptor.setPrettyLogging(true);
-            SynalticLoggingOutInterceptor outInterceptor = new SynalticLoggingOutInterceptor(loggerName);
-            outInterceptor.setPrettyLogging(true);
+            SynalticLoggingInterceptor inInterceptor = new SynalticLoggingInterceptor(loggerName, "receive");
+            SynalticLoggingInterceptor outInterceptor = new SynalticLoggingInterceptor(loggerName, "pre-stream");
             LOGGER.debug("Inject logging interceptors in bus {} (logger {})", bus.getId(), loggerName);
             bus.getInInterceptors().add(inInterceptor);
             bus.getOutInterceptors().add(outInterceptor);
@@ -43,17 +41,17 @@ public class Activator implements BundleActivator {
 
     private void remove(Bus bus) {
         for (Interceptor interceptor : bus.getInInterceptors()) {
-            if (interceptor instanceof SynalticLoggingInInterceptor) {
+            if (interceptor instanceof SynalticLoggingInterceptor) {
                 bus.getInInterceptors().remove(interceptor);
             }
         }
         for (Interceptor interceptor : bus.getOutInterceptors()) {
-            if (interceptor instanceof SynalticLoggingOutInterceptor) {
+            if (interceptor instanceof SynalticLoggingInterceptor) {
                 bus.getOutInterceptors().remove(interceptor);
             }
         }
         for (Interceptor interceptor : bus.getOutFaultInterceptors()) {
-            if (interceptor instanceof SynalticLoggingOutInterceptor) {
+            if (interceptor instanceof SynalticLoggingInterceptor) {
                 bus.getOutFaultInterceptors().remove(interceptor);
             }
         }
