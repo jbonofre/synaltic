@@ -80,6 +80,16 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+		<groupId>org.apache.httpcomponents</groupId>
+		<artifactId>httpclient-osgi</artifactId>
+		<version>4.3.2</version>
+	</dependency>
+        <dependency>
+		<groupId>org.apache.httpcomponents</groupId>
+		<artifactId>httpcore-osgi</artifactId>
+		<version>4.3.3</version>
+	</dependency>
 
         <dependency>
             <groupId>org.osgi</groupId>
@@ -117,7 +127,10 @@
                     <instructions>
                         <Export-Package>com.synaltic.cxf.syncope</Export-Package>
                         <Import-Package>*</Import-Package>
-                        <Embed-Dependency>syncope-client;scope=compile</Embed-Dependency>
+                        <Private-Package>
+				org.apache.syncope*,
+				org.apache.http*
+			</Private-Package>
                         <Bundle-Activator>com.synaltic.cxf.syncope.Activator</Bundle-Activator>
                     </instructions>
                 </configuration>
