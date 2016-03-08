@@ -1,5 +1,6 @@
 package com.synaltic.cxf.syncope;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.cxf.common.util.Base64Utility;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.message.Message;
@@ -11,7 +12,6 @@ import org.apache.wss4j.dom.handler.RequestData;
 import org.apache.wss4j.dom.message.token.UsernameToken;
 import org.apache.wss4j.dom.validate.Credential;
 import org.apache.wss4j.dom.validate.Validator;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

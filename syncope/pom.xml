@@ -14,7 +14,7 @@
     <packaging>bundle</packaging>
 
     <properties>
-        <jackson.version>1.9.0</jackson.version>
+        <jackson.version>2.6.1</jackson.version>
         <syncope.version>1.2.7</syncope.version>
     </properties>
 
@@ -41,13 +41,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-jaxrs</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-xc</artifactId>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
             <version>${jackson.version}</version>
         </dependency>
 
@@ -141,8 +136,7 @@
                         <Private-Package>
 				org.apache.syncope*,
 				org.apache.http*,
-                                org.codehaus.jackson*,
-                                org.codehaus.jackson.xc
+                                com.fasterxml.jackson*
 			</Private-Package>
                         <Bundle-Activator>com.synaltic.cxf.syncope.Activator</Bundle-Activator>
                     </instructions>
