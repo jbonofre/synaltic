@@ -81,15 +81,15 @@
             </exclusions>
         </dependency>
         <dependency>
-		<groupId>org.apache.httpcomponents</groupId>
-		<artifactId>httpclient-osgi</artifactId>
-		<version>4.3.2</version>
-	</dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-osgi</artifactId>
+            <version>4.3.2</version>
+        </dependency>
         <dependency>
-		<groupId>org.apache.httpcomponents</groupId>
-		<artifactId>httpcore-osgi</artifactId>
-		<version>4.3.3</version>
-	</dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore-osgi</artifactId>
+            <version>4.3.3</version>
+        </dependency>
 
         <dependency>
             <groupId>org.osgi</groupId>
@@ -127,17 +127,20 @@
                     <instructions>
                         <Export-Package>com.synaltic.cxf.syncope</Export-Package>
                         <Import-Package>
-				ch.qos.logback.classic;resolution:=optional,
-                                net.spy.memcached;resolution:=optional,
-                                org.springframework.http*;resolution:=optional,
-                                org.springframework.web*;resolution:=optional,
-				*
-			</Import-Package>
+                            ch.qos.logback.classic;resolution:=optional,
+                            net.spy.memcached;resolution:=optional,
+                            org.springframework.http*;resolution:=optional,
+                            org.springframework.web*;resolution:=optional,
+                            org.apache.logging.log4j;resolution:=optional,
+                            *
+                        </Import-Package>
                         <Private-Package>
-				org.apache.syncope*,
-				org.apache.http*,
-                                com.fasterxml.jackson*
-			</Private-Package>
+                            org.apache.syncope*,
+                            org.apache.http*,
+                            com.fasterxml.jackson*,
+                            javax.validation*,
+                            org.apache.commons.lang3*
+                        </Private-Package>
                         <Bundle-Activator>com.synaltic.cxf.syncope.Activator</Bundle-Activator>
                     </instructions>
                 </configuration>
