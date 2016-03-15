@@ -70,7 +70,7 @@ public class SyncopeValidator implements Validator {
         client = client.path("users/self");
         UserTO user;
         try {
-            user = client.accept("application/json").get(UserTO.class);
+            user = client.accept("application/xml").get(UserTO.class);
             if (user == null) {
                 LOGGER.error("User {} not authenticated on Syncope", usernameToken.getName());
                 throw new WSSecurityException(WSSecurityException.ErrorCode.FAILED_AUTHENTICATION);
