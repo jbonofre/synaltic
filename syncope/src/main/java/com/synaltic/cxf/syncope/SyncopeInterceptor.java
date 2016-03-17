@@ -1,6 +1,5 @@
 package com.synaltic.cxf.syncope;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.cxf.common.security.SimpleGroup;
 import org.apache.cxf.common.util.Base64Utility;
 import org.apache.cxf.configuration.security.AuthorizationPolicy;
@@ -139,16 +138,17 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
             }
 
             // Read the user from Syncope and get the roles
-            WebClient client = WebClient.create(address, Collections.singletonList(new JacksonJsonProvider()));
+            WebClient client = WebClient.create(address);
 
             String authorizationHeader = "Basic " + Base64Utility.encode((token.getName() + ":" + token.getPassword()).getBytes());
 
             client.header("Authorization", authorizationHeader);
+            client.accept("application/xml");
 
             client = client.path("users/self");
             UserTO user = null;
             try {
-                user = client.accept("application/json").get(UserTO.class);
+                user = client.get(UserTO.class);
                 if (user == null) {
                     Exception exception = new Exception("Authentication failed");
                     throw new Fault(exception);

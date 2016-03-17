@@ -1,6 +1,5 @@
 package com.synaltic.cxf.syncope;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.apache.cxf.common.util.Base64Utility;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.message.Message;
@@ -15,7 +14,6 @@ import org.apache.wss4j.dom.validate.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,17 +58,18 @@ public class SyncopeValidator implements Validator {
 
         // Send it off to Syncope for validation
         LOGGER.debug("Use Syncope REST API from {}", address);
-        WebClient client = WebClient.create(address, Collections.singletonList(new JacksonJsonProvider()));
+        WebClient client = WebClient.create(address);
 
         String authorizationHeader = "Basic " + Base64Utility.encode((usernameToken.getName() + ":" + usernameToken.getPassword()).getBytes());
 
         client.header("Authorization", authorizationHeader);
+        client.accept("application/xml");
         LOGGER.debug("Authenticating user {} to Syncope server", usernameToken.getName());
 
         client = client.path("users/self");
         UserTO user;
         try {
-            user = client.accept("application/xml").get(UserTO.class);
+            user = client.get(UserTO.class);
             if (user == null) {
                 LOGGER.error("User {} not authenticated on Syncope", usernameToken.getName());
                 throw new WSSecurityException(WSSecurityException.ErrorCode.FAILED_AUTHENTICATION);
