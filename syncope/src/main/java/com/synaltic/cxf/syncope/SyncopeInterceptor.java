@@ -47,7 +47,7 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
     private Dictionary properties;
 
     public SyncopeInterceptor() {
-        this(Phase.UNMARSHAL);
+        this(Phase.READ);
     }
 
     public SyncopeInterceptor(String phase) {
