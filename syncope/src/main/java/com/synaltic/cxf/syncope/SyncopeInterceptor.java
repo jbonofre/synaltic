@@ -1,13 +1,11 @@
 package com.synaltic.cxf.syncope;
 
 import org.apache.cxf.common.security.SimpleGroup;
-import org.apache.cxf.common.util.Base64Utility;
 import org.apache.cxf.configuration.security.AuthorizationPolicy;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.helpers.DOMUtils;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.interceptor.security.DefaultSecurityContext;
-import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.message.MessageImpl;
@@ -17,8 +15,15 @@ import org.apache.cxf.security.SecurityContext;
 import org.apache.cxf.transport.Conduit;
 import org.apache.cxf.transport.http.Headers;
 import org.apache.cxf.ws.addressing.EndpointReferenceType;
-import org.apache.syncope.common.to.MembershipTO;
-import org.apache.syncope.common.to.UserTO;
+import org.apache.felix.utils.json.JSONParser;
+import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.wss4j.common.principal.WSUsernameTokenPrincipalImpl;
 import org.apache.wss4j.dom.WSConstants;
 import org.apache.wss4j.dom.handler.RequestData;
@@ -109,15 +114,6 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
             RequestData data = new RequestData();
             data.setMsgContext(message);
 
-            LOGGER.info("Call the Syncope validator");
-            try {
-                credential = validator.validate(credential, data);
-            } catch (Exception e) {
-                LOGGER.warn("Syncope authentication failed", e);
-                // sendErrorResponse(message, HttpURLConnection.HTTP_FORBIDDEN);
-                sendErrorResponse(message, HttpURLConnection.HTTP_UNAUTHORIZED);
-            }
-
             // Create a Principal/SecurityContext
             Principal p = null;
             if (credential != null && credential.getPrincipal() != null) {
@@ -137,36 +133,44 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
                 throw new Fault(e);
             }
 
-            // Read the user from Syncope and get the roles
-            WebClient client = WebClient.create(address);
-
-            String authorizationHeader = "Basic " + Base64Utility.encode((token.getName() + ":" + token.getPassword()).getBytes());
-
-            client.header("Authorization", authorizationHeader);
-            client.accept("application/xml");
-
-            client = client.path("users/self");
-            UserTO user = null;
+            String version;
             try {
-                user = client.get(UserTO.class);
-                if (user == null) {
-                    Exception exception = new Exception("Authentication failed");
-                    throw new Fault(exception);
-                }
-            } catch (RuntimeException ex) {
-                LOGGER.error(ex.getMessage(), ex);
-                throw new Fault(ex);
+                version = util.getSyncopeVersion();
+            } catch (Exception e) {
+                LOGGER.error("Can't get Syncope version", e);
+                throw new Fault(e);
             }
 
-            // Now get the roles
-            List<MembershipTO> membershipList = user.getMemberships();
-            LinkedList<String> userRoles = new LinkedList<String>();
+            DefaultHttpClient client = new DefaultHttpClient();
+            Credentials creds = new UsernamePasswordCredentials(token.getName(), token.getPassword());
+            client.getCredentialsProvider().setCredentials(AuthScope.ANY, creds);
+            HttpGet get = new HttpGet(address + "/users/self");
+            if (version.equals("2.x") || version.equals("2")) {
+                get.setHeader("Content-Type", "application/json");
+            } else {
+                get.setHeader("Content-Type", "application/xml");
+            }
+
+            List<String> roles;
+            try {
+                CloseableHttpResponse response = client.execute(get);
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    throw new Fault(new SecurityException("Can't authenticate user"));
+                }
+                String responseString = EntityUtils.toString(response.getEntity());
+                if (version.equals("2.x") || version.equals("2")) {
+                    roles = extractingRolesSyncope2(responseString);
+                } else {
+                    roles = extractingRolesSyncope1(responseString);
+                }
+            } catch (Exception e) {
+                throw new Fault(e);
+            }
+
             Subject subject = new Subject();
             subject.getPrincipals().add(p);
-            for (MembershipTO membership : membershipList) {
-                String roleName = membership.getRoleName();
-                userRoles.add(roleName);
-                subject.getPrincipals().add(new SimpleGroup(roleName, token.getName()));
+            for (String role : roles) {
+                subject.getPrincipals().add(new SimpleGroup(role, token.getName()));
             }
             subject.setReadOnly();
 
@@ -200,6 +204,60 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
             }
         };
     }
+
+    /**
+     * Extract the user roles from the XML provided by Syncope 1.x.
+     *
+     * @param response the HTTP response from Syncope.
+     * @return the list of user roles.
+     * @throws Exception in case of extraction failure.
+     */
+    protected List<String> extractingRolesSyncope1(String response) throws Exception {
+        List<String> roles = new ArrayList<String>();
+        if (response != null && !response.isEmpty()) {
+            // extract the <memberships> element if it exists
+            int index = response.indexOf("<memberships>");
+            if (index != -1) {
+                response = response.substring(index + "<memberships>".length());
+                index = response.indexOf("</memberships>");
+                response = response.substring(0, index);
+
+                // looking for the roleName elements
+                index = response.indexOf("<roleName>");
+                while (index != -1) {
+                    response = response.substring(index + "<roleName>".length());
+                    int end = response.indexOf("</roleName>");
+                    if (end == -1) {
+                        index = -1;
+                    }
+                    String role = response.substring(0, end);
+                    roles.add(role);
+                    response = response.substring(end + "</roleName>".length());
+                    index = response.indexOf("<roleName>");
+                }
+            }
+
+        }
+        return roles;
+    }
+
+    /**
+     * Extract the user roles from the JSON provided by Syncope 2.x.
+     *
+     * @param response the HTTP response from Syncope.
+     * @return the list of user roles.
+     * @throws Exception in case of extractiong failure.
+     */
+    @SuppressWarnings("unchecked")
+    protected List<String> extractingRolesSyncope2(String response) throws Exception {
+        List<String> roles = new ArrayList<String>();
+        if (response != null && !response.isEmpty()) {
+            JSONParser parser = new JSONParser(response);
+            return (List<String>) parser.getParsed().get("roles");
+        }
+        return roles;
+    }
+
 
     public void setValidator(Validator validator) {
         this.validator = validator;

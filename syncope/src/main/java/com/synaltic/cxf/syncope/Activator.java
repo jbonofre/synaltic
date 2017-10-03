@@ -25,13 +25,9 @@ public class Activator implements BundleActivator {
     private void inject(Bus bus, Dictionary properties) throws Exception {
         InterceptorsUtil util = new InterceptorsUtil(properties);
         if (util.busDefined(bus.getId())) {
-            LOGGER.debug("Create Syncope validator");
-            SyncopeValidator syncopeValidator = new SyncopeValidator();
-            syncopeValidator.setProperties(properties);
 
             LOGGER.debug("Create Syncope interceptor");
             SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
-            syncopeInterceptor.setValidator(syncopeValidator);
             syncopeInterceptor.setProperties(properties);
 
             LOGGER.debug("Injecting Syncope interceptor in bus {}", bus.getId());

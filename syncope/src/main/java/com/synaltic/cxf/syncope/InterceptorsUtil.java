@@ -82,6 +82,16 @@ public class InterceptorsUtil {
         throw new IllegalStateException("syncope.address property not found in the configuration");
     }
 
+    public String getSyncopeVersion() throws Exception {
+        if (properties != null) {
+            Object version = properties.get("syncope.version");
+            if (version != null) {
+                return ((String) version);
+            }
+        }
+        throw new IllegalStateException("syncope.version property not found in the configuration");
+    }
+
     /**
      * Check if a bus ID is defined in the configuration
      *
