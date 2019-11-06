@@ -29,7 +29,6 @@ import org.apache.wss4j.dom.WSConstants;
 import org.apache.wss4j.dom.handler.RequestData;
 import org.apache.wss4j.dom.message.token.UsernameToken;
 import org.apache.wss4j.dom.validate.Credential;
-import org.apache.wss4j.dom.validate.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -47,9 +46,8 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
 
     private final Logger LOGGER = LoggerFactory.getLogger(SyncopeInterceptor.class);
 
-    private Validator validator;
-
     private Dictionary properties;
+    private String busId;
 
     public SyncopeInterceptor() {
         this(Phase.READ);
@@ -167,6 +165,10 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
                 throw new Fault(e);
             }
 
+            if (!util.authorize(busId, roles)) {
+                throw new Fault(new SecurityException("Unauthorized"));
+            }
+
             Subject subject = new Subject();
             subject.getPrincipals().add(p);
             for (String role : roles) {
@@ -258,9 +260,8 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
         return roles;
     }
 
-
-    public void setValidator(Validator validator) {
-        this.validator = validator;
+    public void setBusId(String busId) {
+        this.busId = busId;
     }
 
     public void setProperties(Dictionary properties) {

@@ -29,6 +29,7 @@ public class Activator implements BundleActivator {
             LOGGER.debug("Create Syncope interceptor");
             SyncopeInterceptor syncopeInterceptor = new SyncopeInterceptor();
             syncopeInterceptor.setProperties(properties);
+            syncopeInterceptor.setBusId(bus.getId());
 
             LOGGER.debug("Injecting Syncope interceptor in bus {}", bus.getId());
             bus.getInInterceptors().add(syncopeInterceptor);
