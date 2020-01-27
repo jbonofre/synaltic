@@ -139,6 +139,13 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
                 throw new Fault(e);
             }
 
+            if (token.getName() == null || token.getName().isEmpty()) {
+                throw new Fault(new SecurityException("Empty username is not allowed"));
+            }
+            if (token.getPassword() == null || token.getPassword().isEmpty()) {
+                throw new Fault(new SecurityException("Empty password is not allowed"));
+            }
+
             DefaultHttpClient client = new DefaultHttpClient();
             Credentials creds = new UsernamePasswordCredentials(token.getName(), token.getPassword());
             client.getCredentialsProvider().setCredentials(AuthScope.ANY, creds);
