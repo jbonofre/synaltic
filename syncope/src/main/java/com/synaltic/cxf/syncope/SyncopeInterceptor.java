@@ -187,7 +187,8 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
             message.put(DefaultSecurityContext.class, new DefaultSecurityContext(p, subject));
 
         } catch (Exception ex) {
-            throw new Fault(ex);
+            LOGGER.warn("Authentication failed", ex);
+            sendErrorResponse(message, HttpURLConnection.HTTP_UNAUTHORIZED);
         }
     }
 
