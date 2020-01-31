@@ -98,6 +98,9 @@ public class SyncopeInterceptor extends AbstractPhaseInterceptor<Message> {
 
         if (policy == null || policy.getUserName() == null || policy.getPassword() == null) {
             // no authentication provided, send error response
+            LOGGER.debug("Policy: {}", policy);
+            LOGGER.debug("Username: {}", policy != null ? policy.getUserName() : null);
+            LOGGER.debug("Password: {}", policy != null ? policy.getPassword() : null);
             sendErrorResponse(message, HttpURLConnection.HTTP_UNAUTHORIZED);
             return;
         }
